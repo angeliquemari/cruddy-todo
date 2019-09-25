@@ -2,7 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const _ = require('underscore');
 const counter = require('./counter');
+const Promise = require('bluebird');
 
+const readdirAsync = Promise.promisify(fs.readdir);
+const readFileAsync = Promise.promisify(fs.readFile);
 var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
@@ -25,17 +28,27 @@ exports.create = (text, callback) => {
 };
 
 exports.readAll = (callback) => {
-  fs.readdir(exports.dataDir, function (err, files) {
-    if (err) {
-      console.log('Err reading files');
-    } else {
-      var data = _.map(files, (file) => {
-        var parsedFilename = file.replace('.txt', '');
-        return {id: parsedFilename, text: parsedFilename};
+  var ids = [];
+  return readdirAsync(exports.dataDir)
+    .then(function (files) {
+      return Promise.map(files, function(filename) {
+        ids.push(filename.replace('.txt', ''));
+        return readFileAsync(`${exports.dataDir}/${filename}`);
       });
-      callback(null, data); // data is the array that is the output of the mapping
-    }
-  }); // files is an array of file names
+    })
+    .then(function(todos) {
+      var data = [];
+      for (let i = 0; i < ids.length; i++) {
+        var todoObj = {};
+        todoObj['id'] = ids[i];
+        todoObj['text'] = todos[i].toString();
+        data.push(todoObj);
+      }
+      callback(null, data);
+    })
+    .catch(function(e) {
+      callback(e, null);
+    });
 };
 
 exports.readOne = (id, callback) => {

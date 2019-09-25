@@ -48,7 +48,6 @@ exports.getNextUniqueId = (callback) => {
         if (err) {
           throw ('error writing counter');
         } else {
-          console.log('got counter ID');
           callback(null, counterString);
         }
       });
