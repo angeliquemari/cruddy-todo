@@ -6,7 +6,6 @@ const Promise = require('bluebird');
 
 const readdirAsync = Promise.promisify(fs.readdir);
 const readFileAsync = Promise.promisify(fs.readFile);
-var items = {};
 
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
